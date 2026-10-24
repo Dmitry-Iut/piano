@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#ffd6e0" />
+  <meta name="apple-mobile-web-app-title" content="Пианино" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>Утреннее пианино для Лены</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div id="floating-notes" class="floating-notes"></div>
+  </div>
+
+  <main id="app">
+    <!-- ===== Экран 1: пожелания ===== -->
+    <section id="screen-intro" class="screen active">
+      <div class="intro-card">
+        <div class="intro-sun">☀️</div>
+        <h1>Доброе утро, Лена!</h1>
+        <div class="wishes">
+          <p class="wish" style="--d:.4s">Пусть это утро начнётся с самой нежной мелодии — твоей улыбки.</p>
+          <p class="wish" style="--d:1.2s">Пусть кофе будет тёплым, солнце — ласковым, а день — лёгким, как пёрышко.</p>
+          <p class="wish" style="--d:2s">Пусть всё задуманное складывается само собой, будто ноты в любимой песне.</p>
+          <p class="wish" style="--d:2.8s">Я собрал для тебя семь мелодий. Сыграй любую — и в конце тебя ждёт маленький сюрприз 🎁</p>
+          <p class="wish accent" style="--d:3.6s">Помни: ты — самая красивая музыка в моей жизни.</p>
+        </div>
+        <p class="sign" style="--d:4.3s">твой Дима ❤️</p>
+        <button id="btn-start" class="btn primary big" style="--d:4.8s">Включить музыку утра 🎹</button>
+      </div>
+    </section>
+
+    <!-- ===== Экран 2: выбор мелодии ===== -->
+    <section id="screen-menu" class="screen">
+      <header class="menu-head">
+        <button id="btn-to-intro" class="icon-btn" aria-label="К пожеланиям">💌</button>
+        <div>
+          <h2>Выбери мелодию</h2>
+          <p id="menu-progress" class="muted">Сыграно 0 из 7</p>
+        </div>
+      </header>
+      <div class="daily">
+        <span class="daily-label">Пожелание дня</span>
+        <p id="daily-wish"></p>
+      </div>
+      <div id="all-done" class="all-done hidden">
+        🏆 Ты сыграла все мелодии! Теперь у тебя официально самое музыкальное утро на свете.
+        <button id="btn-grand" class="btn primary">🌅 Рассвет с Маленьким принцем</button>
+      </div>
+      <div id="song-list" class="song-list"></div>
+    </section>
+
+    <!-- ===== Экран 3: игра ===== -->
+    <section id="screen-game" class="screen">
+      <header class="game-head">
+        <button id="btn-back" class="icon-btn" aria-label="Назад">←</button>
+        <div class="game-title">
+          <h2 id="game-title">Мелодия</h2>
+          <p id="game-composer" class="muted">Композитор</p>
+        </div>
+        <button id="btn-restart" class="icon-btn" aria-label="Заново">↻</button>
+      </header>
+
+      <div class="progress-row">
+        <div class="progress"><div id="progress-bar" class="progress-bar"></div></div>
+        <span id="progress-text" class="progress-text">0/0</span>
+      </div>
+
+      <div class="game-tools">
+        <p id="game-hint" class="hint">Нажимай светящуюся клавишу ✨</p>
+        <button id="btn-listen" class="btn pill">🎧 Послушать</button>
+      </div>
+
+      <div id="lane" class="lane"><div id="lane-inner" class="lane-inner"></div></div>
+
+      <div class="keyboard-frame">
+        <div id="keys" class="keys"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Финал ===== -->
+  <div id="finale" class="finale hidden">
+    <canvas id="finale-canvas"></canvas>
+    <div id="finale-card" class="finale-card">
+      <div id="fin-emoji" class="fin-emoji">🎉</div>
+      <h2 id="fin-title">Браво, Лена!</h2>
+      <div id="fin-stars" class="fin-stars">★★★</div>
+      <p id="fin-wish" class="fin-wish"></p>
+      <p id="fin-score" class="fin-score muted"></p>
+      <div class="fin-actions">
+        <button id="fin-replay" class="btn ghost">↻ Ещё раз</button>
+        <button id="fin-menu" class="btn primary">К мелодиям ♪</button>
+      </div>
+    </div>
+    <p class="fin-tip">Нажми на экран, чтобы полюбоваться анимацией</p>
+  </div>
+
+  <div class="rotate-hint">📱<p>Поверни телефон вертикально — так играть удобнее 💛</p></div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/songs.js"></script>
+  <script src="js/finale.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
