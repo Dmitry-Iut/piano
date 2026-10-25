@@ -30,14 +30,55 @@ const Piano = (() => {
     return buf;
   }
 
-  // Вызывается по первому нажатию — нужно для iPhone (Safari не даёт звук без касания)
+  // Тихий WAV-цикл: пока играет <audio>, iOS считает страницу «медиа»
+  // и не глушит Web Audio беззвучным режимом (переключатель сбоку)
+  function silentWav() {
+    const n = 4410;
+    const buf = new ArrayBuffer(44 + n * 2);
+    const v = new DataView(buf);
+    const str = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVE');
+    str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, 44100, true); v.setUint32(28, 88200, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    str(36, 'data'); v.setUint32(40, n * 2, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+
+  let keepAlive = null;
+  function unlockMediaChannel() {
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = 'playback'; // iOS 17+
+    } catch (e) {}
+    if (!keepAlive) {
+      keepAlive = document.createElement('audio');
+      keepAlive.setAttribute('playsinline', '');
+      keepAlive.loop = true;
+      keepAlive.src = silentWav();
+    }
+    if (keepAlive.paused) {
+      const p = keepAlive.play();
+      if (p && p.catch) p.catch(() => {});
+    }
+  }
+
+  // на iOS бывает не только 'suspended', но и 'interrupted' (после блокировки/звонка)
+  function resume() {
+    if (ctx && ctx.state !== 'running') {
+      const p = ctx.resume();
+      if (p && p.catch) p.catch(() => {});
+    }
+  }
+
+  // Вызывается по нажатию — нужно для iPhone (Safari не даёт звук без касания)
   function init() {
+    unlockMediaChannel();
     if (ctx) {
-      if (ctx.state === 'suspended') ctx.resume();
+      resume();
       return;
     }
     const AC = window.AudioContext || window.webkitAudioContext;
     ctx = new AC();
+    resume();
 
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -16;
@@ -70,6 +111,7 @@ const Piano = (() => {
   // Одна нота. note — 'C4' или номер midi, dur — секунды, vel — громкость 0..1
   function play(note, dur = 0.6, vel = 0.8, when = 0) {
     if (!ctx) init();
+    else resume();
     const m = typeof note === 'number' ? note : midi(note);
     const f = freq(m);
     const t = ctx.currentTime + when + 0.005;
@@ -140,6 +182,16 @@ const Piano = (() => {
     timers.forEach(clearTimeout);
     timers = [];
   }
+
+  // Любое касание страницы «будит» звук; после возврата во вкладку — тоже
+  ['touchend', 'pointerdown', 'click', 'keydown'].forEach((ev) =>
+    document.addEventListener(ev, init, { capture: true, passive: true })
+  );
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !ctx) return;
+    resume();
+    if (keepAlive && keepAlive.paused) keepAlive.play().catch(() => {});
+  });
 
   return { init, play, chime, playSequence, stopSequence, midi, nameOf };
 })();
